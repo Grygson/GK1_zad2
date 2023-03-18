@@ -1,60 +1,83 @@
+package lab1a;
+
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
-import java.io.IOException;
+import java.awt.geom.AffineTransform;
 
-public class Transforms2D extends JPanel {
 
-    private class Display extends JPanel {
-        protected void paintComponent(Graphics g) {
-            super.paintComponent(g);
-            Graphics2D g2 = (Graphics2D)g;
-            g2.translate(300,300);  // Moves (0,0) to the center of the display.
-            int whichTransform = transformSelect.getSelectedIndex();
+public class TransformedShapes extends JPanel {
 
-            // TODO Apply transforms here, depending on the value of whichTransform!
+    //------- For drawing ONLY while paintComponent is being executed! --------
 
-            g2.drawImage(pic, -200, -150, null); // Draw image with center at (0,0).
-        }
+    private Graphics2D g2; // A copy of the graphics context from paintComponent.
+
+    /**
+     * Removes any transformations that have been applied to g2, so that
+     * it is back to the standard default coordinate system.
+     */
+    private void resetTransform() {
+        g2.setTransform(new AffineTransform());
     }
 
-    private Display display;
-    private BufferedImage pic;
-    private JComboBox<String> transformSelect;
+    /**
+     * Draws a filled circle of radius 50 (diameter 100) centered at (0,0),
+     * subject to whatever transform(s) have been applied to g2.
+     */
+    private void circle() {
+        g2.fillOval(-50,-50,100,100);
+    }
 
-    public Transforms2D() throws IOException {
-        pic = ImageIO.read(getClass().getClassLoader().getResource("shuttle.jpg"));
-        display = new Display();
-        display.setBackground(Color.YELLOW);
-        display.setPreferredSize(new Dimension(600,600));
-        transformSelect = new JComboBox<String>();
-        transformSelect.addItem("None");
-        for (int i = 1; i < 10; i++) {
-            transformSelect.addItem("No. " + i);
-        }
-        transformSelect.addActionListener( new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                display.repaint();
-            }
-        });
-        setLayout(new BorderLayout(3,3));
-        setBackground(Color.GRAY);
-        setBorder(BorderFactory.createLineBorder(Color.GRAY,10));
-        JPanel top = new JPanel();
-        top.setLayout(new FlowLayout(FlowLayout.CENTER));
-        top.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
-        top.add(new JLabel("Transform: "));
-        top.add(transformSelect);
-        add(display,BorderLayout.CENTER);
-        add(top,BorderLayout.NORTH);
+    /**
+     * Draws a filled square with side 100 centered at (0,0), subject
+     * to whatever transform(s) have been applied to g2.
+     */
+    private void square() {
+        g2.fillRect(-50,-50,100,100);
+    }
+
+    /**
+     * Draws a filled triangle with vertices at (-50,50), (50,50), and
+     * (0,-50), subject to whatever transform(s) have been applied to g2.
+     */
+    private void triangle() {
+        g2.fillPolygon(new int[] {-50,50,0}, new int[] {50,50,-50}, 3);
+    }
+
+    //-----------------------------------------------------------------------------------
+
+
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        g2 = (Graphics2D)g.create();
+
+        g2.setColor(Color.GREEN);
+        g2.translate(300,300);
+        g2.scale(1.5, 1.5);
+        square();
+
+        g2.setColor(Color.WHITE);
+        g2.scale(1,0.5);
+        g2.translate(0,50);
+        triangle();
+
+        resetTransform();
     }
 
 
-    public static void main(String[] args) throws IOException {
-        JFrame window = new JFrame("2D Transforms");
-        window.setContentPane(new Transforms2D());
+
+
+    //--------------------------------------------------------------------------------------
+
+    public TransformedShapes() {
+        setPreferredSize(new Dimension(600,600) );
+        setBackground(Color.WHITE);
+        setBorder(BorderFactory.createLineBorder(Color.BLACK,4));
+    }
+
+    public static void main(String[] args)  {
+        JFrame window = new JFrame("Drawing With Transforms");
+        window.setContentPane(new TransformedShapes());
         window.pack();
         window.setResizable(false);
         window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
